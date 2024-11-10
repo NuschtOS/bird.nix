@@ -38,21 +38,21 @@ let
       '';
 
       protocols = {
-        device = "";
+        device."" = "";
 
-        "kernel kernel4" = ''
+        kernel.kernel4 = ''
           ipv4 {
             import none;
             export all;
           };
         '';
 
-        "static static4" = ''
+        static.static4 = ''
           ipv4;
           include "static4.conf";
         '';
 
-        "ospf v2 ospf4" = ''
+        ospfv2.ospf4 = ''
           ipv4 {
             export all;
           };
@@ -64,19 +64,19 @@ let
           };
         '';
 
-        "kernel kernel6" = ''
+        kernel.kernel6 = ''
           ipv6 {
             import none;
             export all;
           };
         '';
 
-        "static static6" = ''
+        static.static6 = ''
           ipv6;
           include "static6.conf";
         '';
 
-        "ospf v3 ospf6" = ''
+        ospfv3.ospf6 = ''
           ipv6 {
             export all;
           };

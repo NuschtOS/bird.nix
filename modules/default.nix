@@ -9,22 +9,49 @@ in
       description = "The router ID is a world-wide unique identification of your router, usually one of router's IPv4 addresses.";
     };
 
-    protocols = lib.mkOption {
-      type = with lib.types; attrsOf lines;
-    };
+    protocols =
+      let
+        protocolOption = lib.mkOption {
+          type = with lib.types; attrsOf lines;
+          default = { };
+        };
+      in
+      {
+        # List of all protocols: https://bird.network.cz/?get_doc&v=20&f=bird-6.html
+        aggregator = protocolOption;
+        babel = protocolOption;
+        bfd = protocolOption;
+        bgp = protocolOption;
+        bmp = protocolOption;
+        device = protocolOption;
+        direct = protocolOption;
+        kernel = protocolOption;
+        l3vpn = protocolOption;
+        mrt = protocolOption;
+        ospfv2 = protocolOption;
+        ospfv3 = protocolOption;
+        perf = protocolOption;
+        pipe = protocolOption;
+        radv = protocolOption;
+        rip = protocolOption;
+        rpki = protocolOption;
+        static = protocolOption;
+      };
   };
 
   config = lib.mkIf cfg.enable {
     services.bird2 = {
       config =
         let
-          protocols = lib.mapAttrsToList
-            (name: conf: ''
-              protocol ${name} {
-                ${conf}
-              }
-            '')
-            cfg.protocols;
+          protocols = lib.flatten (lib.mapAttrsToList
+            (type: entries: lib.mapAttrsToList
+              (name: conf: ''
+                protocol ${if type == "ospfv2" then "ospf v2" else if type == "ospfv3" then "ospf v3" else type} ${name} {
+                  ${conf}
+                }
+              '')
+              entries)
+            cfg.protocols);
         in
         ''
           router id ${cfg.routerId};
