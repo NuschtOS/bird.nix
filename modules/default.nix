@@ -4,10 +4,17 @@ let
 in
 {
   options.services.bird2 = {
+    # we do not wan't merged config's to result in multiple routerId's
     routerId = lib.mkOption {
       type = lib.types.str;
       description = "The router ID is a world-wide unique identification of your router, usually one of router's IPv4 addresses.";
     };
+
+    # networking.domain has no default value...
+    #hostName = lib.mkOption {
+    #  type = lib.types.str;
+    #  default = "${config.networking.hostName}.${config.networking.domain}";
+    #};
 
     protocols =
       let
@@ -53,6 +60,7 @@ in
               entries)
             cfg.protocols);
         in
+        #hostname ${cfg.hostName};
         ''
           router id ${cfg.routerId};
 
