@@ -10,23 +10,27 @@ in
     };
 
     protocols = lib.mkOption {
-      type = with lib.types; attrsOf str;
+      type = with lib.types; attrsOf lines;
     };
   };
 
   config = lib.mkIf cfg.enable {
     services.bird2 = {
-      config = ''
-        router id ${cfg.routerId};
-
-        ${builtins.concatStringsSep "\n" (builtins.attrValues
-          (builtins.mapAttrs
+      config =
+        let
+          protocols = lib.mapAttrsToList
             (name: conf: ''
               protocol ${name} {
                 ${conf}
               }
-            '') cfg.protocols))}
-      '';
+            '')
+            cfg.protocols;
+        in
+        ''
+          router id ${cfg.routerId};
+
+          ${builtins.concatStringsSep "\n" protocols}
+        '';
     };
   };
 }
