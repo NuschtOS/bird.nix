@@ -15,56 +15,78 @@ in
     #  type = lib.types.str;
     #  default = "${config.networking.hostName}.${config.networking.domain}";
     #};
-
-    protocols =
-      let
-        protocolOption = lib.mkOption {
-          type = with lib.types; attrsOf lines;
-          default = { };
-        };
-      in
-      {
-        # List of all protocols: https://bird.network.cz/?get_doc&v=20&f=bird-6.html
-        aggregator = protocolOption;
-        babel = protocolOption;
-        bfd = protocolOption;
-        bgp = protocolOption;
-        bmp = protocolOption;
-        device = protocolOption;
-        direct = protocolOption;
-        kernel = protocolOption;
-        l3vpn = protocolOption;
-        mrt = protocolOption;
-        ospfv2 = protocolOption;
-        ospfv3 = protocolOption;
-        perf = protocolOption;
-        pipe = protocolOption;
-        radv = protocolOption;
-        rip = protocolOption;
-        rpki = protocolOption;
-        static = protocolOption;
+  } // (
+    let
+      option = lib.mkOption {
+        type = with lib.types; attrsOf lines;
+        default = { };
       };
-  };
+      options = {
+        # List of all protocols: https://bird.network.cz/?get_doc&v=20&f=bird-6.html
+        aggregator = option;
+        babel = option;
+        bfd = option;
+        bgp = option;
+        bmp = option;
+        device = option;
+        direct = option;
+        kernel = option;
+        l3vpn = option;
+        mrt = option;
+        perf = option;
+        pipe = option;
+        radv = option;
+        rip = option;
+        rpki = option;
+        static = option;
+      };
+    in
+    {
+      templates = options;
+      protocols = options // {
+        # ospf does not support templates
+        ospfv2 = option;
+        ospfv3 = option;
+      };
+    }
+  );
 
   config = lib.mkIf cfg.enable {
     services.bird2 = {
       config =
         let
-          protocols = lib.flatten (lib.mapAttrsToList
-            (type: entries: lib.mapAttrsToList
-              (name: conf: ''
-                protocol ${if type == "ospfv2" then "ospf v2" else if type == "ospfv3" then "ospf v3" else type} ${name} {
-                  ${conf}
-                }
-              '')
-              entries)
-            cfg.protocols);
+          mkTemplate = { name, type, conf }: ''
+            template ${type} ${name} {
+              ${conf}
+            }
+          '';
+
+          mkTemplates = templates: lib.flatten (lib.mapAttrsToList
+            (type: entries:
+              lib.mapAttrsToList
+                (name: conf: mkTemplate { inherit name type conf; })
+                entries)
+            templates);
+
+          mkProtocol = { name, type, conf }: ''
+            protocol ${if type == "ospfv2" then "ospf v2" else if type == "ospfv3" then "ospf v3" else type} ${name} {
+              ${conf}
+            }
+          '';
+
+          mkProtocols = protocols: lib.flatten (lib.mapAttrsToList
+            (type: entries:
+              lib.mapAttrsToList
+                (name: conf: mkProtocol { inherit name type conf; })
+                entries)
+            protocols);
         in
         #hostname ${cfg.hostName};
         ''
           router id ${cfg.routerId};
 
-          ${builtins.concatStringsSep "\n" protocols}
+          ${builtins.concatStringsSep "\n" (mkTemplates cfg.templates)}
+          ${builtins.concatStringsSep "\n" (mkProtocols cfg.protocols)}
         '';
     };
   };
