@@ -1,9 +1,10 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
-  cfg = config.services.bird2;
+  bird = if lib.versionAtLeast lib.version "24.11" then "bird" else "bird2";
+  cfg = config.services.${bird};
 in
 {
-  options.services.bird2 = {
+  options.services.${bird} = {
     # we do not wan't merged config's to result in multiple routerId's
     routerId = lib.mkOption {
       type = lib.types.str;
@@ -52,7 +53,7 @@ in
   );
 
   config = lib.mkIf cfg.enable {
-    services.bird2 = {
+    services.${bird} = {
       config =
         let
           mkTemplate = { name, type, conf }: ''
@@ -88,6 +89,9 @@ in
           ${builtins.concatStringsSep "\n" (mkTemplates cfg.templates)}
           ${builtins.concatStringsSep "\n" (mkProtocols cfg.protocols)}
         '';
+
+      # not bird3 compatible, yet
+      package = pkgs.bird2;
     };
   };
 }
