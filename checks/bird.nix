@@ -1,6 +1,8 @@
 { self, pkgs, ... }:
 
 let
+  bird = if pkgs.lib.versionAtLeast pkgs.lib.version "24.11" then "bird" else "bird2";
+
   makeBird2Host = hostId: { pkgs, ... }: {
     imports = [
       self.nixosModules.default
@@ -21,7 +23,7 @@ let
       networkConfig.Address = "10.0.0.${hostId}/24";
     };
 
-    services.bird2 = {
+    services.${bird} = {
       enable = true;
 
       routerId = "10.0.0.${hostId}";
@@ -96,8 +98,8 @@ let
     ];
   };
 in
-pkgs.nixosTest {
-  name = "bird2";
+pkgs.testers.nixosTest {
+  name = "bird";
 
   nodes.host1 = makeBird2Host "1";
   nodes.host2 = makeBird2Host "2";
@@ -105,9 +107,9 @@ pkgs.nixosTest {
   testScript = ''
     start_all()
 
-    host1.wait_for_unit("bird2.service")
-    host2.wait_for_unit("bird2.service")
-    host1.succeed("systemctl reload bird2.service")
+    host1.wait_for_unit("${bird}.service")
+    host2.wait_for_unit("${bird}.service")
+    host1.succeed("systemctl reload ${bird}.service")
 
     with subtest("Waiting for advertised IPv4 routes"):
       host1.wait_until_succeeds("ip --json r | jq -e 'map(select(.dst == \"10.10.0.2\")) | any'")
