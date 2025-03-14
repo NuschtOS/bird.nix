@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let
-  bird = if lib.versionAtLeast lib.version "24.11" then "bird" else "bird2";
+  bird = if lib.versionAtLeast lib.version "25.05" then "bird" else "bird2";
   cfg = config.services.${bird};
 in
 {

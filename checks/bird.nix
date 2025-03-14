@@ -1,7 +1,7 @@
 { self, pkgs, ... }:
 
 let
-  bird = if pkgs.lib.versionAtLeast pkgs.lib.version "24.11" then "bird" else "bird2";
+  bird = if pkgs.lib.versionAtLeast pkgs.lib.version "25.05" then "bird" else "bird2";
 
   makeBird2Host = hostId: { pkgs, ... }: {
     imports = [
