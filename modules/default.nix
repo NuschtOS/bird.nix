@@ -1,10 +1,9 @@
 { config, lib, pkgs, ... }:
 let
-  bird = if lib.versionAtLeast lib.version "25.05" then "bird" else "bird2";
-  cfg = config.services.${bird};
+  cfg = config.services.bird;
 in
 {
-  options.services.${bird} = {
+  options.services.bird = {
     # we do not wan't merged config's to result in multiple routerId's
     routerId = lib.mkOption {
       type = lib.types.str;
@@ -53,7 +52,7 @@ in
   );
 
   config = lib.mkIf cfg.enable {
-    services.${bird} = {
+    services.bird = {
       config =
         let
           mkTemplate = { name, type, conf }: ''
