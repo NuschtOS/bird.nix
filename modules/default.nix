@@ -1,6 +1,11 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.services.bird;
+
+  indent = n: text:
+    lib.concatMapStringsSep "\n"
+      (line: "${lib.strings.replicate n " "}${line}")
+      (lib.splitString "\n" text);
 in
 {
   options.services.bird = {
@@ -57,7 +62,7 @@ in
         let
           mkTemplate = { name, type, conf }: ''
             template ${type} ${name} {
-              ${conf}
+            ${indent 2 conf}
             }
           '';
 
@@ -70,7 +75,7 @@ in
 
           mkProtocol = { name, type, conf }: ''
             protocol ${if type == "ospfv2" then "ospf v2" else if type == "ospfv3" then "ospf v3" else type} ${name} {
-              ${conf}
+            ${indent 2 conf}
             }
           '';
 
